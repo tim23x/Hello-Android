@@ -5,12 +5,14 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using System.Collections.Generic;
 
 namespace Phoneword
 {
     [Activity(Label = "Phone Word", MainLauncher = true, Icon = "@drawable/icon")]
     public class MainActivity : Activity
     {
+        static readonly List<string> phoneNumbers = new List<string>();
 
         protected override void OnCreate(Bundle bundle)
         {
@@ -23,6 +25,7 @@ namespace Phoneword
             EditText phoneNumberText = FindViewById<EditText>(Resource.Id.PhoneNumberText);
             Button translateButton = FindViewById<Button>(Resource.Id.TranslateButton);
             Button callButton = FindViewById<Button>(Resource.Id.CallButton);
+            Button callHistoryButton = FindViewById<Button>(Resource.Id.CallHistoryButton);
 
             // Disable the "Call" button
             callButton.Enabled = false;
@@ -52,6 +55,9 @@ namespace Phoneword
                 var callDialog = new AlertDialog.Builder(this);
                 callDialog.SetMessage("Call " + translatedNumber + "?");
                 callDialog.SetNeutralButton("Call", delegate {
+                    //Add dialled number to list of called numbers
+                    phoneNumbers.Add(translatedNumber);
+                    callHistoryButton.Enabled = true;
                     // Create intent to dial phone
                     var callIntent = new Intent(Intent.ActionCall);
                     callIntent.SetData(Android.Net.Uri.Parse("tel:" + translatedNumber));
@@ -61,6 +67,13 @@ namespace Phoneword
 
                 // Show the alert dialog to the user and wait for response.
                 callDialog.Show();
+            };
+
+            callHistoryButton.Click += (sender, e) =>
+            {
+                var intent = new Intent(this, typeof(CallHistoryActivity));
+                intent.PutStringArrayListExtra("phone_numbers", phoneNumbers);
+                StartActivity(intent);
             };
         }
     }
